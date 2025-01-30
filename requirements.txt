@@ -5,6 +5,7 @@ cycler==0.12.1
 fonttools==4.55.8
 idna==3.10
 joblib==1.4.2
+kagglehub==0.3.6
 kiwisolver==1.4.8
 matplotlib==3.10.0
 numpy==2.2.2
@@ -20,6 +21,7 @@ scipy==1.15.1
 seaborn==0.13.2
 six==1.17.0
 threadpoolctl==3.5.0
+tqdm==4.67.1
 tzdata==2025.1
 urllib3==2.3.0
 whois==1.20240129.2
