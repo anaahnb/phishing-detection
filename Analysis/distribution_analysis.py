@@ -3,14 +3,17 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
 import os
-from data.data_loader import load_data
-from settings.keys import ParamsKeys
+from DataLoading.data_loader import DataLoader
+from Settings.keys import ParamsKeys
 
-df = load_data()
+data_loader = DataLoader()
+df = data_loader.load_data()
+
 df_numeric = df.select_dtypes(include=[np.number])
 
-output_dir = "analysis/results"
-os.makedirs(output_dir, exist_ok=True)
+output_dir = "Figures"
+if not os.path.exists(output_dir):
+    os.makedirs(output_dir)
 
 plt.figure(figsize=(6, 4))
 sns.countplot(x=ParamsKeys.STATUS, data=df, palette='Set2')
@@ -27,4 +30,4 @@ sns.boxplot(data=df_numeric[num_cols], orient='h', palette='Set2')
 plt.title('Boxplots das Variáveis Numéricas')
 plt.savefig(f"{output_dir}/boxplots.png", dpi=300, bbox_inches="tight")
 
-print('Gráficos salvos em analysis/results')
+print(f'Gráficos salvos em {output_dir}')

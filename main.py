@@ -1,16 +1,20 @@
 import os
-from data.data_loader import load_data
-from data.data_processing import clean_data
-from features.url_features import extract_all_url_features
+from DataLoading import DataLoader
+from DataEngineering import DataCleaner
+from FeatureEngineering import UrlFeatureExtractor
 
-df = load_data()
-df = clean_data(df)
+data_loader = DataLoader()
+df = data_loader.load_data()
 
-output_dir = "data/processed"
+data_cleaner = DataCleaner(df)
+df = data_cleaner.clean()
+
+output_dir = "Datasets/processed"
 if not os.path.exists(output_dir):
     os.makedirs(output_dir)
 
-df = extract_all_url_features(df)
+features = UrlFeatureExtractor(df)
+df = features.extract_all()
 
 df.to_csv(f"{output_dir}/phishing_dataset_cleaned.csv", index=False)
-print("Pré-processamento concluído! Dados salvos em data/processed")
+print(f"Pré-processamento concluído! Dados salvos em {output_dir}")

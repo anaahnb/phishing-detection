@@ -1,0 +1,5 @@
+from .url_length_feature_extractor import UrlLengthFeatureExtractor
+from .special_characters_feature_extractor import SpecialCharactersFeatureExtractor
+from .email_feature_extractor import EmailFeatureExtractor
+from .url_shortening_feature_extractor import UrlShorteningFeatureExtractor
+from .url_feature_extractor import UrlFeatureExtractor
