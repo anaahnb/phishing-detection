@@ -1,11 +1,17 @@
 import os
+import sys
 import joblib
 import pandas as pd
+
+sys.path.append(os.path.abspath(os.path.dirname(__file__) + "/.."))
+
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, classification_report
-from DataLoading import DataLoader
+from DataLoading.data_loader import DataLoader
+from DataEngineering.preprocessing import DataPreprocessor
 from Settings.keys import ParamsKeys
+from FeatureEngineering.url_feature_extractor import UrlFeatureExtractor
 
 class PhishingModelTrainer:
     def __init__(self):
@@ -20,9 +26,8 @@ class PhishingModelTrainer:
         return df
 
     def preprocess_data(self, df):
-        X = df.drop(columns=ParamsKeys.STATUS)
-        y = df["status"]
-        return train_test_split(X, y, test_size=0.2, random_state=42)
+        preprocessor = DataPreprocessor(df)
+        return preprocessor.preprocess()
 
     def train(self):
         df = self.load_data()
