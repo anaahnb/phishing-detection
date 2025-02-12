@@ -1,6 +1,8 @@
+import sys
 import os
+
 from DataLoading.data_loader import DataLoader
-from DataEngineering.data_cleaner import DataCleaner
+from DataEngineering.data_processing import DataCleaner
 from FeatureEngineering.url_feature_extractor import UrlFeatureExtractor
 
 class DataPreprocessing:
@@ -38,6 +40,6 @@ class DataPreprocessing:
         self.extract_features()
         self.save_data()
 
-if _name_ == "_main_":
+if __name__ == "_main_":
     preprocessor = DataPreprocessing()
     preprocessor.run()
