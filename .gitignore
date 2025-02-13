@@ -6,4 +6,6 @@ __pycache__/
 
 Datasets/processed
 Figures
-Evaluation
+Evaluation/model_comparison_results.csv
+Evaluation/phishing_model.pkl
+Evaluation/xgboost_best_model.pkl
