@@ -1,1 +1,2 @@
 from .hyperparameter_tuning import XGBoostHyperparameterTuning
+from .model_evaluator import ModelEvaluator
