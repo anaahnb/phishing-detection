@@ -9,3 +9,6 @@ Figures
 Evaluation/model_comparison_results.csv
 Evaluation/phishing_model.pkl
 Evaluation/xgboost_best_model.pkl
+Interface/dist
+gui.spec
+build
