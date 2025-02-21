@@ -1,26 +1,29 @@
 import os
 import sys
 import joblib
-import pandas as pd
+import warnings
 import xgboost as xgb
-
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, classification_report, precision_score, recall_score, f1_score
-
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 sys.path.append(os.path.abspath(os.path.dirname(__file__) + "/.."))
-
+from Settings.keys import ParamsKeys
 from DataLoading.data_loader import DataLoader
 from DataEngineering.preprocessing import DataPreprocessor
-from FeatureEngineering.url_feature_extractor import UrlFeatureExtractor
 
-class PhishingModelTrainer:
+warnings.filterwarnings("ignore")
+
+class XGBoostTrainer:
     def __init__(self):
-
+        """Inicializa o classificador XGBoost com os melhores hiperparâmetros encontrados."""
         self.model = xgb.XGBClassifier(
-            n_estimators=300,
-            max_depth=9,
+            colsample_bytree=1.0,
+            gamma=0.1,
             learning_rate=0.1,
-            colsample_bytree=0.7,
+            max_depth=6,
+            n_estimators=300,
+            reg_alpha=0,
+            reg_lambda=1,
+            subsample=0.7,
+            use_label_encoder=False,
             eval_metric="logloss",
             random_state=42
         )
@@ -29,20 +32,35 @@ class PhishingModelTrainer:
             os.makedirs(self.output_dir)
 
     def load_data(self):
+        """Carrega os dados de phishing."""
         data_loader = DataLoader()
         df = data_loader.load_data()
         return df
 
     def preprocess_data(self, df):
+        """Pré-processa os dados e divide em conjuntos de treino, validação e teste."""
         preprocessor = DataPreprocessor(df)
-        return preprocessor.preprocess()
+        train_set, test_set, val_set = preprocessor.clean_and_split()
 
-    def train(self):
-        """Treina o modelo XGBoost e avalia seu desempenho."""
+        if "url" in train_set.columns:
+            train_set = train_set.drop(columns=[ParamsKeys.URL])
+            test_set = test_set.drop(columns=[ParamsKeys.URL])
+            val_set = val_set.drop(columns=[ParamsKeys.URL])
+
+        # Separando features (X) e rótulos (y)
+        X_train, y_train = train_set.drop(columns=[ParamsKeys.STATUS]), train_set[ParamsKeys.STATUS]
+        X_test, y_test = test_set.drop(columns=[ParamsKeys.STATUS]), test_set[ParamsKeys.STATUS]
+
+        return X_train, X_test, y_train, y_test
+
+    def train_model(self):
+        """Treina o modelo e avalia seu desempenho no conjunto de teste."""
         df = self.load_data()
         X_train, X_test, y_train, y_test = self.preprocess_data(df)
 
-        print("\nTreinando o modelo XGBoost...")
+        print("\nIniciando o treinamento do modelo XGBoost...")
+
+        # Treinamento do modelo
         self.model.fit(X_train, y_train)
 
         y_pred = self.model.predict(X_test)
@@ -52,17 +70,16 @@ class PhishingModelTrainer:
         recall = recall_score(y_test, y_pred)
         f1 = f1_score(y_test, y_pred)
 
-        print("\nDesempenho do Modelo Final XGBoost:")
+        print("\nDesempenho do Modelo no Conjunto de Teste:")
         print(f"Acurácia: {accuracy:.4f}")
         print(f"Precisão: {precision:.4f}")
         print(f"Recall: {recall:.4f}")
         print(f"F1-score: {f1:.4f}")
-        print("\nRelatório de Classificação:\n", classification_report(y_test, y_pred))
 
-        model_path = os.path.join(self.output_dir, "xgboost_phishing_model.pkl")
+        model_path = os.path.join(self.output_dir, "xgboost_trained_model.pkl")
         joblib.dump(self.model, model_path)
-        print(f"\nModelo salvo em: {model_path}")
+        print(f"\nModelo treinado salvo em: {model_path}")
 
 if __name__ == "__main__":
-    trainer = PhishingModelTrainer()
-    trainer.train()
+    trainer = XGBoostTrainer()
+    trainer.train_model()
