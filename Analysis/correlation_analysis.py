@@ -26,7 +26,7 @@ class CorrelationAnalysis:
         plt.savefig(f"{self.output_dir}/correlation_matrix.png", dpi=300, bbox_inches="tight")
         print(f'A matriz foi salva em {self.output_dir}')
 
-if _name_ == "_main_":
+if __name__ == "__main__":
     data_loader = DataLoader()
     df = data_loader.load_data()
 
