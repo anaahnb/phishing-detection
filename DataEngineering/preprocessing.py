@@ -10,6 +10,10 @@ class DataCleaner:
         """Remove valores nulos do DataFrame."""
         self.df = self.df.dropna()
 
+    def transform_status_column(self):
+        """Transforma a coluna status de string para inteiro (1 para phishing, 0 para legítimo)."""
+        self.df[ParamsKeys.STATUS] = self.df[ParamsKeys.STATUS].map({'phishing': 1, 'legitimate': 0})
+
     def split_data(self, test_size=0.2, val_size=0.1, random_state=42):
         """Divide os dados de forma estratificada para preservar a distribuição dos outliers."""
 
