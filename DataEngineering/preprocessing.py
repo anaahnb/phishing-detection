@@ -2,7 +2,7 @@ from Settings.keys import ParamsKeys
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
-class DataCleaner:
+class DataPreprocessor:
     def __init__(self, df: pd.DataFrame):
         self.df = df
 
@@ -54,4 +54,5 @@ class DataCleaner:
     def clean_and_split(self):
         """Executa a limpeza dos dados e os divide."""
         self.remove_null_values()
+        self.transform_status_column()
         return self.split_data()

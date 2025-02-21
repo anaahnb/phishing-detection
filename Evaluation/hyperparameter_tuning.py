@@ -10,6 +10,7 @@ from xgboost import XGBClassifier
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 from DataLoading.data_loader import DataLoader
 from DataEngineering.preprocessing import DataPreprocessor
+from Settings.keys import ParamsKeys
 
 warnings.filterwarnings("ignore")
 
@@ -19,11 +20,14 @@ class XGBoostHyperparameterTuning:
         self.model = XGBClassifier(use_label_encoder=False, eval_metric="logloss", random_state=42)
 
         self.param_grid = {
-            "n_estimators": [100, 200, 300],  # Número de árvores
-            "max_depth": [3, 6, 9],           # Profundidade das árvores
-            "learning_rate": [0.01, 0.1, 0.3], # Taxa de aprendizado
-            "subsample": [0.7, 1.0],          # Amostragem de dados para cada árvore
-            "colsample_bytree": [0.7, 1.0]    # Amostragem de features por árvore
+            "n_estimators": [100, 200, 300],
+            "max_depth": [3, 6, 9],
+            "learning_rate": [0.01, 0.1, 0.3],
+            "subsample": [0.7, 1.0],
+            "colsample_bytree": [0.7, 1.0],
+            "gamma": [0, 0.1, 0.2],
+            "reg_alpha": [0, 0.1, 0.5],
+            "reg_lambda": [1, 1.5, 2.0]
         }
 
         self.output_dir = "Evaluation"
@@ -37,24 +41,34 @@ class XGBoostHyperparameterTuning:
         return df
 
     def preprocess_data(self, df):
-        """Pré-processa os dados."""
+        """Pré-processa os dados com divisão consistente de outliers."""
         preprocessor = DataPreprocessor(df)
-        X_train, X_test, y_train, y_test = preprocessor.preprocess()
-        return X_train, X_test, y_train, y_test
+        train_set, test_set, val_set = preprocessor.clean_and_split()
+
+        if "url" in train_set.columns:
+            train_set = train_set.drop(columns=[ParamsKeys.URL])
+            test_set = test_set.drop(columns=[ParamsKeys.URL])
+            val_set = val_set.drop(columns=[ParamsKeys.URL])
+
+        X_train, y_train = train_set.drop(columns=[ParamsKeys.STATUS]), train_set[ParamsKeys.STATUS]
+        X_test, y_test = test_set.drop(columns=[ParamsKeys.STATUS]), test_set[ParamsKeys.STATUS]
+        X_val, y_val = val_set.drop(columns=[ParamsKeys.STATUS]), val_set[ParamsKeys.STATUS]
+
+        return X_train, X_test, X_val, y_train, y_test, y_val
 
     def tune_hyperparameters(self):
         """Executa o Grid Search para encontrar os melhores hiperparâmetros."""
         df = self.load_data()
-        X_train, X_test, y_train, y_test = self.preprocess_data(df)
+        X_train, X_test, X_val, y_train, y_test, y_val = self.preprocess_data(df)
 
         print("\nIniciando o ajuste de hiperparâmetros...")
 
         grid_search = GridSearchCV(
             estimator=self.model,
             param_grid=self.param_grid,
-            scoring="f1",  # Otimizamos para o F1-score (equilíbrio entre precisão e recall)
-            cv=3,  # Validação cruzada com 3 divisões
-            n_jobs=-1,  # Usa todos os núcleos disponíveis
+            scoring="f1",
+            cv=3,
+            n_jobs=-1,
             verbose=2
         )
 
@@ -69,12 +83,17 @@ class XGBoostHyperparameterTuning:
         )
         self.model.fit(X_train, y_train)
 
-        # Avaliar modelo final
-        y_pred = self.model.predict(X_test)
-        accuracy = accuracy_score(y_test, y_pred)
-        precision = precision_score(y_test, y_pred)
-        recall = recall_score(y_test, y_pred)
-        f1 = f1_score(y_test, y_pred)
+        # Avaliação no conjunto de validação
+        y_val_pred = self.model.predict(X_val)
+        val_f1 = f1_score(y_val, y_val_pred)
+        print(f"F1-score no conjunto de validação: {val_f1:.4f}")
+
+        # Avaliação final no conjunto de teste
+        y_test_pred = self.model.predict(X_test)
+        accuracy = accuracy_score(y_test, y_test_pred)
+        precision = precision_score(y_test, y_test_pred)
+        recall = recall_score(y_test, y_test_pred)
+        f1 = f1_score(y_test, y_test_pred)
 
         print("\nDesempenho do Modelo Otimizado:")
         print(f"Acurácia: {accuracy:.4f}")
