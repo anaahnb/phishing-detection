@@ -7,7 +7,8 @@ class SpecialCharactersFeatureExtractor:
     def __init__(self, df: pd.DataFrame):
         self.df = df
 
-    def extract(self) -> pd.DataFrame:
-        special_chars = ['@', '-', '_', '/', '?', '=', '.', '&', '!', '~', ',', '+', '*', '#', '$', '%']
-        self.df[ParamsKeys.SPECIAL_CHAR_COUNT] = self.df[ParamsKeys.URL].apply(lambda x: sum(x.count(char) for char in special_chars))
+    def extract_nb_special_chars(self) -> pd.DataFrame:
+        special_chars = ['.', '-', '@', '?', '&', '|', '=', '_', '~', '%', '/', '*', ':', ',', ';', '$', ' ']
+        for char in special_chars:
+            self.df[f'nb_{char}'] = self.df['url'].apply(lambda x: x.count(char))
         return self.df

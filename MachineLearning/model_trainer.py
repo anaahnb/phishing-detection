@@ -2,20 +2,28 @@ import os
 import sys
 import joblib
 import pandas as pd
+import xgboost as xgb
+
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, classification_report, precision_score, recall_score, f1_score
 
 sys.path.append(os.path.abspath(os.path.dirname(__file__) + "/.."))
 
-from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score, classification_report
 from DataLoading.data_loader import DataLoader
 from DataEngineering.preprocessing import DataPreprocessor
-from Settings.keys import ParamsKeys
 from FeatureEngineering.url_feature_extractor import UrlFeatureExtractor
 
 class PhishingModelTrainer:
     def __init__(self):
-        self.model = RandomForestClassifier(n_estimators=100, random_state=42)
+
+        self.model = xgb.XGBClassifier(
+            n_estimators=300,
+            max_depth=9,
+            learning_rate=0.1,
+            colsample_bytree=0.7,
+            eval_metric="logloss",
+            random_state=42
+        )
         self.output_dir = "Evaluation"
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir)

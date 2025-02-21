@@ -1,62 +1,86 @@
-import sys
+import pandas as pd
+import numpy as np
+import joblib
 import os
+import sys
+import subprocess
+import PySimpleGUI as sg
 
 sys.path.append(os.path.abspath(os.path.dirname(__file__) + "/.."))
-
-import PySimpleGUI as sg
-import joblib
-import pandas as pd
-from MachineLearning.model_trainer import PhishingModelTrainer
 from FeatureEngineering.url_feature_extractor import UrlFeatureExtractor
 
-class PhishingDetectorGUI:
-    def __init__(self, model_path="Evaluation/phishing_model.pkl"):
-        self.model_path = model_path
-        self.model = self.load_model()
-        self.window = self.create_window()
-    
-    def load_model(self):
-        """Carrega o modelo treinado."""
-        return joblib.load(self.model_path)
-    
-    def create_window(self):
-        """Cria a interface gráfica."""
-        sg.theme("LightBlue2")
-        layout = [
-            [sg.Text("Insira a URL para análise:")],
-            [sg.InputText(key="URL")],
-            [sg.Button("Verificar"), sg.Button("Sair")],
-            [sg.Text("", size=(40, 1), key="RESULTADO", text_color="black", justification="center")]
-        ]
-        return sg.Window("Detecção de Phishing", layout)
-    
-    def extract_features(self, url):
-        """Extrai as features da URL fornecida."""
-        df_temp = pd.DataFrame([{"url": url}])
-        extractor = UrlFeatureExtractor(df_temp)
-        return extractor.extract_all()
-    
-    def predict(self, features):
-        """Realiza a predição da URL."""
-        return self.model.predict(features)
-    
-    def run(self):
-        """Executa o loop da interface gráfica."""
-        while True:
-            event, values = self.window.read()
-            if event in (sg.WINDOW_CLOSED, "Sair"):
-                break
-            if event == "Verificar":
-                url = values["URL"]
-                if url:
-                    df_features = self.extract_features(url)
-                    prediction = self.predict(df_features)
-                    resultado = "Phishing" if prediction[0] == 1 else "Legítima"
-                    color = "red" if prediction[0] == 1 else "green"
-                    self.window["RESULTADO"].update(f"Classificação: {resultado}", text_color=color)
-        
-        self.window.close()
+from DataEngineering.preprocessing import DataPreprocessor
+
+MODEL_PATH = "Evaluation/xgboost_best_model.pkl"
+TUNING_SCRIPT = "MachineLearning/hyperparameter_tuning.py"
+
+def check_and_generate_model():
+    """Verifica se o modelo treinado existe. Se não existir, executa o script de ajuste de hiperparâmetros."""
+    if not os.path.exists(MODEL_PATH):
+        print("Modelo não encontrado. Executando ajuste de hiperparâmetros...")
+        result = subprocess.run(["python", TUNING_SCRIPT], capture_output=True, text=True)
+        print(result.stdout)
+        print(result.stderr)
+        if not os.path.exists(MODEL_PATH):
+            raise FileNotFoundError("Erro ao gerar o modelo. Verifique o script de ajuste de hiperparâmetros.")
+
+def load_model():
+    """Carrega o modelo treinado."""
+    return joblib.load(MODEL_PATH)
+
+def classify_url(url, model):
+    """Classifica a URL fornecida usando o modelo carregado."""
+
+    # Criar um DataFrame com a URL fornecida
+    df = pd.DataFrame([url], columns=["url"])
+
+    # Passar o DataFrame para o extrator de features
+    extractor = UrlFeatureExtractor(df)
+    features_df = extractor.extract_all()
+
+    # Carregar os nomes das features esperadas
+    expected_features = model.get_booster().feature_names
+    print("Features de treino:", model.get_booster().feature_names)
+
+    # Garantir que todas as features esperadas estão presentes (mesmo que com valor 0)
+    features_df = pd.DataFrame(np.zeros((1, len(expected_features))), columns=expected_features)
+
+    # Garantir que as features estão na ordem correta
+    features_df = features_df[expected_features]
+    print(features_df.head())  # Ver se as features estão corretas
+    print(features_df.describe())
+    # Fazer a predição
+    prediction = model.predict(features_df.values)
+
+    return "Phishing" if prediction == 1 else "Legítima"
+
+def main():
+    check_and_generate_model()
+    model = load_model()
+
+    sg.theme("DarkBlue")
+    layout = [
+        [sg.Text("Insira a URL para verificação:")],
+        [sg.InputText(key="-URL-")],
+        [sg.Button("Verificar"), sg.Button("Sair")],
+        [sg.Text("", size=(30,1), key="-OUTPUT-")]
+    ]
+
+    window = sg.Window("Detecção de Phishing", layout)
+
+    while True:
+        event, values = window.read()
+        if event in (sg.WINDOW_CLOSED, "Sair"):
+            break
+        if event == "Verificar":
+            url = values["-URL-"]
+            if url:
+                resultado = classify_url(url, model)
+                window["-OUTPUT-"].update(f"Resultado: {resultado}")
+            else:
+                window["-OUTPUT-"].update("Por favor, insira uma URL.")
+
+    window.close()
 
 if __name__ == "__main__":
-    app = PhishingDetectorGUI()
-    app.run()
+    main()
