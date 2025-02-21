@@ -1,8 +1,10 @@
 import os
+import sys
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
+sys.path.append(os.path.abspath(os.path.dirname(__file__) + "/.."))
 from DataLoading.data_loader import DataLoader
 from Settings.keys import ParamsKeys
 

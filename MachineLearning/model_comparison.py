@@ -4,9 +4,7 @@ import joblib
 import pandas as pd
 import warnings
 warnings.filterwarnings("ignore")
-
 sys.path.append(os.path.abspath(os.path.dirname(__file__) + "/.."))
-
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
