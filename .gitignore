@@ -4,7 +4,6 @@ __pycache__/
 *.pyo
 *.ipynb_checkpoints
 
-Datasets/processed
 Figures
 Evaluation/model_comparison_results.csv
 Evaluation/xgboost_best_model.pkl
