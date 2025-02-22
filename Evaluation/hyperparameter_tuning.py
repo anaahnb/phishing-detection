@@ -2,15 +2,14 @@ import os
 import sys
 import joblib
 import warnings
-
 sys.path.append(os.path.abspath(os.path.dirname(__file__) + "/.."))
-
 from sklearn.model_selection import GridSearchCV
 from xgboost import XGBClassifier
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 from DataLoading.data_loader import DataLoader
 from DataEngineering.preprocessing import DataPreprocessor
 from Settings.keys import ParamsKeys
+from FeatureEngineering.url_feature_extractor import UrlFeatureExtractor
 
 warnings.filterwarnings("ignore")
 
@@ -47,8 +46,13 @@ class XGBoostHyperparameterTuning:
 
         if "url" in train_set.columns:
             train_set = train_set.drop(columns=[ParamsKeys.URL])
-            test_set = test_set.drop(columns=[ParamsKeys.URL])
             val_set = val_set.drop(columns=[ParamsKeys.URL])
+
+        if "url" in test_set.columns:
+            feature_extractor = UrlFeatureExtractor(test_set)
+            test_set = feature_extractor.extract_all()
+            feature_cols = [col for col in extracted_features.columns if col != "url"]
+            test_set = test_set.drop(columns=[ParamsKeys.URL])
 
         X_train, y_train = train_set.drop(columns=[ParamsKeys.STATUS]), train_set[ParamsKeys.STATUS]
         X_test, y_test = test_set.drop(columns=[ParamsKeys.STATUS]), test_set[ParamsKeys.STATUS]

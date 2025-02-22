@@ -3,6 +3,7 @@ import sys
 import joblib
 import warnings
 import xgboost as xgb
+import pandas as pd
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 sys.path.append(os.path.abspath(os.path.dirname(__file__) + "/.."))
 from Settings.keys import ParamsKeys
@@ -42,14 +43,16 @@ class XGBoostTrainer:
         preprocessor = DataPreprocessor(df)
         train_set, test_set, val_set = preprocessor.clean_and_split()
 
-        if "url" in train_set.columns:
+        # Remover a coluna de URL se existir
+        if ParamsKeys.URL in train_set.columns:
             train_set = train_set.drop(columns=[ParamsKeys.URL])
             test_set = test_set.drop(columns=[ParamsKeys.URL])
             val_set = val_set.drop(columns=[ParamsKeys.URL])
 
-        # Separando features (X) e rótulos (y)
-        X_train, y_train = train_set.drop(columns=[ParamsKeys.STATUS]), train_set[ParamsKeys.STATUS]
-        X_test, y_test = test_set.drop(columns=[ParamsKeys.STATUS]), test_set[ParamsKeys.STATUS]
+        # Garantir que apenas as features extraídas sejam usadas
+        feature_columns = [col for col in train_set.columns if col != ParamsKeys.STATUS]
+        X_train, y_train = train_set[feature_columns], train_set[ParamsKeys.STATUS]
+        X_test, y_test = test_set[feature_columns], test_set[ParamsKeys.STATUS]
 
         return X_train, X_test, y_train, y_test
 
@@ -58,7 +61,7 @@ class XGBoostTrainer:
         df = self.load_data()
         X_train, X_test, y_train, y_test = self.preprocess_data(df)
 
-        print("\nIniciando o treinamento do modelo XGBoost...")
+        print("\n✅ Iniciando o treinamento do modelo XGBoost...")
 
         # Treinamento do modelo
         self.model.fit(X_train, y_train)
@@ -70,15 +73,15 @@ class XGBoostTrainer:
         recall = recall_score(y_test, y_pred)
         f1 = f1_score(y_test, y_pred)
 
-        print("\nDesempenho do Modelo no Conjunto de Teste:")
-        print(f"Acurácia: {accuracy:.4f}")
-        print(f"Precisão: {precision:.4f}")
-        print(f"Recall: {recall:.4f}")
-        print(f"F1-score: {f1:.4f}")
+        print("\n📊 Desempenho do Modelo no Conjunto de Teste:")
+        print(f"   🔹 Acurácia: {accuracy:.4f}")
+        print(f"   🔹 Precisão: {precision:.4f}")
+        print(f"   🔹 Recall: {recall:.4f}")
+        print(f"   🔹 F1-score: {f1:.4f}")
 
         model_path = os.path.join(self.output_dir, "xgboost_trained_model.pkl")
         joblib.dump(self.model, model_path)
-        print(f"\nModelo treinado salvo em: {model_path}")
+        print(f"\n💾 Modelo treinado salvo em: {model_path}")
 
 if __name__ == "__main__":
     trainer = XGBoostTrainer()
