@@ -1,14 +1,30 @@
 from Settings.keys import ParamsKeys
 import pandas as pd
 from sklearn.model_selection import train_test_split
+from FeatureEngineering.url_feature_extractor import UrlFeatureExtractor
 
 class DataPreprocessor:
     def __init__(self, df: pd.DataFrame):
         self.df = df
 
+    def extract_features(self):
+        """Extrai as features da URL e do HTML da página."""
+        feature_extractor = UrlFeatureExtractor(self.df)
+        self.df = feature_extractor.extract_all()
+
+        # Filtra a base para conter apenas as colunas extraídas
+        extracted_features = self.df.columns.tolist()
+        self.df = self.df[extracted_features]
+
     def remove_null_values(self):
-        """Remove valores nulos do DataFrame."""
-        self.df = self.df.dropna()
+        """Remove valores nulos do DataFrame e exibe a quantidade de amostras removidas."""
+        before_removal = self.df.shape[0]
+        self.df.dropna(inplace=True)
+        after_removal = self.df.shape[0]
+        removed = before_removal - after_removal
+
+        print(f"Total de amostras removidas por valores nulos: {removed}")
+        print(f"Tamanho do conjunto após remoção: {after_removal}")
 
     def transform_status_column(self):
         """Transforma a coluna status de string para inteiro (1 para phishing, 0 para legítimo)."""
@@ -52,7 +68,7 @@ class DataPreprocessor:
         return train_set, test_set, val_set
 
     def clean_and_split(self):
-        """Executa a limpeza dos dados e os divide."""
+        """Executa a extração de features, limpeza dos dados e divisão."""
         self.remove_null_values()
         self.transform_status_column()
         return self.split_data()
