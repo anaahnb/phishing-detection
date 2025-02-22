@@ -11,7 +11,7 @@ from Settings.keys import ParamsKeys
 class DistributionAnalysis:
     """Realiza a análise de distribuição das variáveis do conjunto de dados."""
 
-    def _init_(self, df: pd.DataFrame, output_dir: str = "Figures"):
+    def __init__(self, df: pd.DataFrame, output_dir: str = "Figures"):
         self.df = df
         self.df_numeric = df.select_dtypes(include=[np.number])
         self.output_dir = output_dir

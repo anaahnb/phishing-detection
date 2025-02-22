@@ -1,14 +1,16 @@
 import os
+import sys
 import pandas as pd
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
+sys.path.append(os.path.abspath(os.path.dirname(__file__) + "/.."))
 from DataLoading.data_loader import DataLoader
 
 class CorrelationAnalysis:
     """Classe responsável por gerar e salvar a matriz de correlação das variáveis numéricas."""
 
-    def _init_(self, df: pd.DataFrame, output_dir: str = "Figures"):
+    def __init__(self, df: pd.DataFrame, output_dir: str = "Figures"):
         self.df = df.select_dtypes(include=[np.number])
         self.output_dir = output_dir
         self._prepare_output_directory()
