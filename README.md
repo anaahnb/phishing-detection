@@ -1,4 +1,3 @@
-  
 # Phishing Detection
 
 ## Instalação
@@ -16,12 +15,6 @@ pip install -r requirements.txt
 
 Estando dentro do ambiente virtual, utilize os comandos abaixo
 
-### Para executar o processo completo de pré-processamento
-Esse script irá carregar os dados, limpá-los, extrair características das URLs (features) e salvar os dados processados.
-```bash
-python main.py
-```
-
 ### Para visualizar as análises realizadas:
 
 Esse script apresenta uma **análise de correlação entre as variáveis numéricas** para entender como elas se relacionam. Ao executá-lo, um gráfico será gerado dentro da pasta ```analysis/results```.
@@ -29,11 +22,14 @@ Esse script apresenta uma **análise de correlação entre as variáveis numéri
 python -m Analysis/correlation_analysis
 ```
 
-Esse script apresenta a **análise da distribuição das variáveis** do conjunto de dados. Ele gera gráficos sobre a distribuição da variável alvo e das variáveis numéricas, incluindo histogramas e boxplots. Ao executá-lo, gráficos serão gerados dentro da pasta ```analysis/results```.
+Esse script apresenta a **análise da distribuição das variáveis** do conjunto de dados. Ele gera gráficos sobre a distribuição da variável alvo e das variáveis numéricas, incluindo histogramas e boxplots. Ao executá-lo, gráficos serão gerados dentro da pasta ```Analysis/results```.
 
 ```bash
 python -m Analysis/distribution_analysis
 ```
+
+### Extras
+No diretório ```Interface/gui.py``` encontra-se a interface gráfica do modelo e em ```main.py``` é gerado o executável.
 
 Reconhecimentos e Direitos Autorais
 
