@@ -1,5 +1,7 @@
 import os
+import sys
 import pandas as pd
+sys.path.append(os.path.abspath(os.path.dirname(__file__) + "/.."))
 from DataLoading import DataDownloader, DataExtractor
 from Settings.keys import ParamsKeys
 
@@ -36,3 +38,12 @@ class DataLoader:
             raise FileNotFoundError(f"O arquivo CSV não foi encontrado em: {csv_file}")
 
         return pd.read_csv(csv_file)
+
+if __name__ == "__main__":
+    data_loader = DataLoader()
+    df = data_loader.load_data()
+
+    if df is not None and not df.empty:
+        print(f"Dados carregados com sucesso! O dataset contém {df.shape[0]} linhas e {df.shape[1]} colunas.")
+    else:
+        print("Falha ao carregar os dados.")
