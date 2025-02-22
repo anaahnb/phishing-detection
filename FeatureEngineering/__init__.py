@@ -8,3 +8,4 @@ from .extract_https_token import HttpsTokenExtractor
 from .extract_tld_features import TLDExtract
 from .extract_ip import IPExtractor
 from .dns_record import DnsExtrator
+from .security_features import PhishingFeatureExtractor

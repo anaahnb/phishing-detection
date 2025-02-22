@@ -33,7 +33,7 @@ class PhishingModelComparison:
 
   def preprocess_data(self, df):
     preprocessor = DataPreprocessor(df)
-    return preprocessor.preprocess()
+    return preprocessor.clean_and_split()
 
   def train_and_evaluate(self):
     df = self.load_data()

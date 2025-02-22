@@ -3,8 +3,10 @@ import tldextract
 import whois
 import datetime
 import requests
+import socket
 import pandas as pd
 from urllib.parse import urlparse
+from tqdm import tqdm
 
 class PhishingFeatureExtractor:
     def __init__(self, df: pd.DataFrame):
@@ -16,12 +18,12 @@ class PhishingFeatureExtractor:
         self.df['brand_in_path'] = self.df['url'].apply(self.brand_in_path)
         self.df['avg_word_path'] = self.df['url'].apply(self.avg_word_length)
         self.df['longest_words_raw'] = self.df['url'].apply(self.longest_word)
-        self.df['domain_age'] = self.df['url'].apply(self.get_domain_age)
         self.df['port'] = self.df['url'].apply(self.extract_port)
         self.df['prefix_suffix'] = self.df['url'].apply(lambda x: 1 if '-' in urlparse(x).netloc else 0)
 
         # Processa features baseadas no HTML separadamente
-        self.df = self.df.apply(self.process_html_features, axis=1)
+        tqdm.pandas()
+        self.df = self.df.progress_apply(self.process_html_features, axis=1)
 
         return self.df
 
@@ -39,7 +41,7 @@ class PhishingFeatureExtractor:
     def fetch_html(self, url: str) -> str:
         """Baixa o HTML da página."""
         try:
-            response = requests.get(url, timeout=5)
+            response = requests.get(url, timeout=2)
             if response.status_code == 200:
                 return response.text
         except requests.RequestException:
@@ -92,21 +94,6 @@ class PhishingFeatureExtractor:
     def longest_word(self, url: str) -> int:
         words = re.findall(r'\w+', url)
         return max(len(word) for word in words) if words else 0
-
-    def get_domain_age(self, url: str) -> int:
-        try:
-            domain = tldextract.extract(url).registered_domain
-            whois_info = whois.whois(domain)
-            if isinstance(whois_info.creation_date, list):
-                creation_date = whois_info.creation_date[0]
-            else:
-                creation_date = whois_info.creation_date
-            if creation_date:
-                age = (datetime.datetime.now() - creation_date).days // 365
-                return age
-        except:
-            return -1
-        return -1
 
     def extract_port(self, url: str) -> int:
         parsed_url = urlparse(url)
